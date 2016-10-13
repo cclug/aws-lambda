@@ -22,4 +22,8 @@ def lambda_handler(event, context):
       })
     
     responseJson = json.dumps(response, indent=4, sort_keys=True)
-    return {"statusCode": 200, "headers": {}, "body": responseJson}
+    if 'redirect' in params:
+      return {"statusCode": 302, "headers": {"Location": params['redirect'][0]}, "body": ''}
+    else:
+      return {"statusCode": 200, "headers": {}, "body": responseJson}
+    
