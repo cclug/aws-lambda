@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	//    "net/mail"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -15,9 +14,16 @@ import (
 
 func main() {
 
-	//  fmt.Printf("%s", body)
+        bucket := "devspire-ses"
+        messageId := "pvnu7delckle60vnrmltf7nut04mrpisdqn3o0g1"
+        
+        body, err := getBody(bucket, messageId)
+        if err != nil {
+                fmt.Println(err.Error())
+                return
+        }
 
-	reader := bytes.NewReader(fullBody)
+	reader := bytes.NewReader(body)
 	msg, err := email.ParseMessage(reader)
 
 	if err != nil {
