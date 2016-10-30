@@ -5,54 +5,52 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/ses"
-
 	"github.com/veqryn/go-email/email"
 )
 
-var connection *session.Session
+// make these variables so we can change them when testing
+// eventually we need to get these programmatically
+var region = "us-east-1"
+var bucket = "devspire-ses"
+var address = "xxxx@gmail.com"
+var subject = "test subject"
+var messageId = "need to get this from event"
 
 func main() {
-
-	region := "us-east-1"
-	bucket := "devspire-ses"
-
-        var err error
-	connection, err = session.NewSession(&aws.Config{Region: aws.String(region)})
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
+	if err != nil {
+		log.Fatal(err)
+	}
+	body, err := getBody(sess, bucket, messageId)
+	if err != nil {
+		log.Fatal(err)
+	}
+	text, err := getText(body)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-
-
-//	messageId := "pvnu7delckle60vnrmltf7nut04mrpisdqn3o0g1"
-
-	text, err := getTextBody(bucket, messageId)
+	fmt.Fprintf(os.Stderr, "%s\n", text)
+	err = sendEmail(sess, address, address, text, subject)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(text)
-        err = sendEmail(text, "test subj")
-        if err != nil {
-                log.Fatal(err)
-        } 
-
 }
 
-func sendEmail(text, subject string) error {
-        email := "xxxx@gmail.com"
-	svc := ses.New(connection)
-
-        // https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#example_SES_SendEmail
-
+// sendEmail: send email (and print response to stderr)
+func sendEmail(sess *session.Session, to, from, text, subject string) error {
+	svc := ses.New(sess)
+	// https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#example_SES_SendEmail
 	params := &ses.SendEmailInput{
-		Destination: &ses.Destination{ // Required			
+		Destination: &ses.Destination{ // Required
 			ToAddresses: []*string{
-				aws.String(email), // Required
+				aws.String(to), // Required
 			},
 		},
 		Message: &ses.Message{ // Required
@@ -63,31 +61,24 @@ func sendEmail(text, subject string) error {
 				},
 			},
 			Subject: &ses.Content{ // Required
-				Data:    aws.String(subject), // Required
+				Data: aws.String(subject), // Required
 			},
 		},
-		Source: aws.String(email), // Required
+		Source: aws.String(from), // Required
 	}
 	resp, err := svc.SendEmail(params)
-
 	if err != nil {
 		return err
 	}
 
-	// Pretty-print the response data.
-	fmt.Println(resp)
-        return nil
+	fmt.Fprintf(os.Stderr, "%v\n", resp)
+	return nil
 }
 
-func getTextBody(bucket, key string) (string, error) {
-	body, err := getBody(bucket, key)
-	if err != nil {
-		return "", err
-	}
-
+// getText: get text from body of email
+func getText(body []byte) (string, error) {
 	reader := bytes.NewReader(body)
 	msg, err := email.ParseMessage(reader)
-
 	if err != nil {
 		return "", err
 	}
@@ -98,23 +89,19 @@ func getTextBody(bucket, key string) (string, error) {
 		// fmt.Println(part.Header["Content-Type"])
 		// todo: parse "[text/plain; charset=UTF-8]"
 	}
-
 	return text, nil
-
 }
 
-func getBody(bucket, key string) ([]byte, error) {
-	svc := s3.New(connection)
+// getBody: get email body from s3 bucket
+func getBody(sess *session.Session, bucket, key string) ([]byte, error) {
+	svc := s3.New(sess)
 	params := &s3.GetObjectInput{
 		Bucket: aws.String(bucket), // required
 		Key:    aws.String(key),    // required
 	}
-
 	resp, err := svc.GetObject(params)
 	if err != nil {
 		return nil, err
 	}
-
-	fullBody, err := ioutil.ReadAll(resp.Body)
-	return fullBody, err
+	return ioutil.ReadAll(resp.Body)
 }
