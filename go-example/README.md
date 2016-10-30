@@ -9,7 +9,7 @@ See functions/simple/main_test.go for example local testing.
 
 To run the example first setup your
 [AWS Credentials](http://apex.run/#aws-credentials), and ensure "role" in
-./project.json is set to your Lambda function ARN.
+./project.json is set to your role ARN.
 
 Deploy the functions:
 
