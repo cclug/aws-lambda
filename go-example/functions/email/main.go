@@ -41,33 +41,26 @@ func main() {
 	})
 }
 
-// data structure used to unmarshal event
-type record struct {
-	ses struct {
-		mail struct {
-			messageId     string
-			commonHeaders struct {
-				returnPath string
-				from       []string
-				date       string
-				to         []string
-				messageId  string
-				subject    string
-			}
-		}
+// simplified mail event
+type mail struct {
+	messageId string
+	headers   struct {
+		from      []string
+		messageId string
+		subject   string
 	}
 }
 
 // handle an event
 func handle(event json.RawMessage) error {
-	r, err := getRecord(event)
+	m, err := eventToMail(event)
 	if err != nil {
 		return err
 	}
 	// set region in ~/.aws/config or call
 	// session.NewSession(&aws.Config{Region: aws.String(region)})
 	sess := session.Must(session.NewSession())
-	body, err := getBody(sess, bucket, r.ses.mail.messageId)
+	body, err := getBody(sess, bucket, m.messageId)
 	if err != nil {
 		return err
 	}
@@ -78,30 +71,52 @@ func handle(event json.RawMessage) error {
 
 	fmt.Fprintf(os.Stderr, "%s\n", text)
 
-	from := r.ses.mail.commonHeaders.from[0] // only accept single sender
+	if len(m.headers.from) > 1 {
+		fmt.Fprintf(os.Stderr, "multiple From not supported: %v\n", m.headers.from)
+	}
+	from := m.headers.from[0] // only accept single sender
 	if !isAuthSender(from) {
 		return fmt.Errorf("sender is not in whitelist: %s", from)
 	}
-	err = sendEmail(sess,
-		from,
-		text,
-		r.ses.mail.commonHeaders.subject)
+	err = sendEmail(sess, from, text, m.headers.subject)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// getRecord: unmarshal record from event
-func getRecord(event json.RawMessage) (record, error) {
-	var records []record
-	if err := json.Unmarshal(event, &records); err != nil {
-		return record{}, err
+// eventToMail: unmarshal record from event
+func eventToMail(event json.RawMessage) (mail, error) {
+	var evs struct {
+		Records []struct {
+			EventSource string `json:"eventSource"`
+			Ses         struct {
+				Mail struct {
+					MessageId     string `json:"messageID"`
+					CommonHeaders struct {
+						ReturnPath string   `json:"returnPath"`
+						From       []string `json:"from"`
+						Date       string   `json:"date"`
+						To         []string `json:"to"`
+						MessageId  string   `json:"messageId"`
+						Subject    string   `json:"subject"`
+					}
+				}
+			}
+		}
 	}
-	if len(records) > 1 {
-		fmt.Fprintf(os.Stderr, "multiple records unexpected: %d\n", len(records))
+	var m mail
+	if err := json.Unmarshal(event, &evs); err != nil {
+		return mail{}, err
 	}
-	return records[0], nil
+	if len(evs.Records) > 1 {
+		fmt.Fprintf(os.Stderr, "multiple records unexpected: %d\n", len(evs.Records))
+	}
+	m.messageId = evs.Records[0].Ses.Mail.MessageId
+	m.headers.from = evs.Records[0].Ses.Mail.CommonHeaders.From
+	m.headers.subject = evs.Records[0].Ses.Mail.CommonHeaders.Subject
+	m.headers.messageId = evs.Records[0].Ses.Mail.CommonHeaders.MessageId
+	return m, nil
 }
 
 // getBody: get email body from s3 bucket
