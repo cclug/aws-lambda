@@ -11,10 +11,7 @@ To run the example first setup your
 [AWS Credentials](http://apex.run/#aws-credentials), and ensure "role" in
 ./project.json is set to your role ARN.
 
-Deploy the functions:
+Deploy the function:
 
-`$ apex deploy`
+`$ apex deploy email`
 
-Try it out:
-
-`$ apex invoke simple < event.json`
