@@ -1,4 +1,4 @@
-package main
+gpackage main
 
 import (
 	"encoding/json"
