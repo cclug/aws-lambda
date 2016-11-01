@@ -1,5 +1,5 @@
 {
     "name": "mailingList",
     "description": "LUG mailing list",
-    "role": "arn:aws:iam::831359158203:role/service-role/myRole"
+    "role": "arn:aws:iam::831359158209:role/service-role/example"
 }
