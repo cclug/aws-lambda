@@ -77,7 +77,7 @@ func handle(event json.RawMessage) error {
 	if !isAuthSender(from) {
 		return fmt.Errorf("sender is not in whitelist: %s", from)
 	}
-	err = sendEmail(sess, from, text, m.headers.subject)
+	err = sendEmail(sess, from, text, m.headers.subject, m.headers.messageId)
 	if err != nil {
 		return err
 	}
@@ -175,35 +175,68 @@ func isAuthSender(s string) bool {
 }
 
 // sendEmail: send email (and print response to stderr)
-func sendEmail(sess *session.Session, from, text, subject string) error {
-	to := whitelistPtrs()
+func sendEmail(sess *session.Session, from, text, subject, messageId string) error {
 	svc := ses.New(sess)
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#example_SES_SendEmail
-	params := &ses.SendEmailInput{
-		Destination: &ses.Destination{ // Required
-			BccAddresses: to,
+	params := &ses.SendRawEmailInput{
+		RawMessage: &ses.RawMessage{ // Required
+			Data: payload(from, text, subject, messageId),
 		},
-		Message: &ses.Message{ // Required
-			Body: &ses.Body{ // Required
-				Text: &ses.Content{
-					Data: aws.String(text), // Required
-					// Charset: aws.String("UTF-8"),
-				},
-			},
-			Subject: &ses.Content{ // Required
-				Data: aws.String(subject), // Required
-			},
+		Destinations: []*string{
+			aws.String("undisclosed recipient:"), // Required
+			// More values...
 		},
-		Source:           aws.String(from), // Required
-		ReplyToAddresses: []*string{aws.String(inboxEmail)},
+		Source: aws.String(from),
 	}
-	resp, err := svc.SendEmail(params)
+	resp, err := svc.SendRawEmail(params)
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintf(os.Stderr, "%v\n", resp)
 	return nil
+}
+
+func payload(from, text, subject, messageId string) []byte { //
+	var buf bytes.Buffer
+
+	buf.WriteString("Bcc: ")
+	to := whitelistPtrs()
+	for i, s := range to {
+		buf.WriteString(*s)
+		if i != len(to)-1 {
+			buf.WriteString(", ")
+		}
+	}
+	buf.WriteString("\r\n")
+
+	buf.WriteString("From: ")
+	buf.WriteString(from)
+	buf.WriteString("\r\n")
+
+	buf.WriteString("Reply-To: ")
+	buf.WriteString(inboxEmail)
+	buf.WriteString("\r\n")
+
+	buf.WriteString("Subject: ")
+	buf.WriteString(subject)
+	buf.WriteString("\r\n")
+
+	buf.WriteString("MIME-Version: 1.0")
+	buf.WriteString("\r\n")
+
+	buf.WriteString("Content-Type: text/plain; charset=UTF-8")
+	buf.WriteString("\r\n")
+
+	buf.WriteString("In-Reply-To: ")
+	buf.WriteString(messageId)
+	buf.WriteString("\r\n")
+	buf.WriteString("\r\n")
+
+	buf.WriteString(text)
+	buf.WriteString("\r\n")
+
+	return buf.Bytes()
 }
 
 // return slice of pointers to whitelisted email addresses
