@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	bucket = "devspire-ses"
-	region = "us-east-1" // see handle()
+	bucket = "cclug"
+        inboxEmail = "inbox@email.cclug.org.au"
 )
 
 // must be all lower case
@@ -58,8 +58,6 @@ func handle(event json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-	// set region in ~/.aws/config or call
-	// session.NewSession(&aws.Config{Region: aws.String(region)})
 	sess := session.Must(session.NewSession())
 	body, err := getBody(sess, bucket, m.messageId)
 	if err != nil {
@@ -190,6 +188,7 @@ func sendEmail(sess *session.Session, from, text, subject string) error {
 			},
 		},
 		Source: aws.String(from), // Required
+                ReplyToAddresses: []*string{aws.String(inboxEmail)},
 	}
 	resp, err := svc.SendEmail(params)
 	if err != nil {
