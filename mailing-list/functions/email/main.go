@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	bucket = "cclug"
-        inboxEmail = "CCLUG mailing list <inbox@email.cclug.org.au>"
+	bucket     = "cclug"
+	inboxEmail = "CCLUG mailing list <inbox@email.cclug.org.au>"
 )
 
 // must be all lower case
@@ -53,7 +53,7 @@ type mail struct {
 
 // handle an event
 func handle(event json.RawMessage) error {
-//        fmt.Println("Executing Lambda function")
+	//        fmt.Println("Executing Lambda function")
 	m, err := eventToMail(event)
 	if err != nil {
 		return err
@@ -141,11 +141,18 @@ func getText(body []byte) (string, error) {
 	}
 
 	var text string
-	for _, part := range msg.PartsContentTypePrefix("text/plain") {
-		text = string(part.Body)
-		// fmt.Println(part.Header["Content-Type"])
-		// todo: parse "[text/plain; charset=UTF-8]"
+	msgBit := msg.PartsContentTypePrefix("text/plain")
+	if len(msgBit) > 0 {
+		for _, part := range msgBit {
+			text = string(part.Body)
+			// fmt.Println(part.Header["Content-Type"])
+			// todo: parse "[text/plain; charset=UTF-8]"
+
+		}
+	} else {
+		text = string(msg.Body) //
 	}
+
 	return text, nil
 }
 
@@ -187,8 +194,8 @@ func sendEmail(sess *session.Session, from, text, subject string) error {
 				Data: aws.String(subject), // Required
 			},
 		},
-		Source: aws.String(from), // Required
-                ReplyToAddresses: []*string{aws.String(inboxEmail)},
+		Source:           aws.String(from), // Required
+		ReplyToAddresses: []*string{aws.String(inboxEmail)},
 	}
 	resp, err := svc.SendEmail(params)
 	if err != nil {
