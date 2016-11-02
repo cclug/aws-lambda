@@ -19,7 +19,7 @@ import (
 
 const (
 	bucket = "cclug"
-        inboxEmail = "inbox@email.cclug.org.au"
+        inboxEmail = "CCLUG mailing list <inbox@email.cclug.org.au>"
 )
 
 // must be all lower case

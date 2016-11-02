@@ -1,0 +1,62 @@
+Return-Path: <me@tobin.cc>
+Received: from out2-smtp.messagingengine.com (out2-smtp.messagingengine.com [66.111.4.26])
+ by inbound-smtp.us-east-1.amazonaws.com with SMTP id kb8qjn12rnk0l9lclb275tkp2rrp6fg885uuvk81
+ for inbox@email.cclug.org.au;
+ Wed, 02 Nov 2016 03:02:58 +0000 (UTC)
+X-SES-Spam-Verdict: PASS
+X-SES-Virus-Verdict: PASS
+Received-SPF: none (spfCheck: 66.111.4.26 is neither permitted nor denied by domain of tobin.cc) client-ip=66.111.4.26; envelope-from=me@tobin.cc; helo=out2-smtp.messagingengine.com;
+Authentication-Results: amazonses.com;
+ spf=none (spfCheck: 66.111.4.26 is neither permitted nor denied by domain of tobin.cc) client-ip=66.111.4.26; envelope-from=me@tobin.cc; helo=out2-smtp.messagingengine.com;
+ dkim=pass header.i=@tobin.cc;
+ dkim=pass header.i=@messagingengine.com;
+X-SES-RECEIPT: AEFBQUFBQUFBQUFIZ3pLbXdCU3pHZHh0UTRpdUV6WkVqY1pCVWsrdmFYKytvTWZRQjZNTmkrcGxndzl2REk2ZlFyajNHdUQxTm9yeXg4Q05LcTRDTHR1QXRYUlRWcENGYjkwaGcweDR6amNuQWRlcGFabEJscXIyL3lxcUFNcjIrbTNXWFRMbEV0cXJBSVZ2Ni9zTXF4VGo1U1BEa0hISk1kZzgvbU9YUExuOEcrTDQzQ1J3TmxWK0FCakVPdmJtTC9mT29rdThEajhZVUxwaEkyYUF4MFJoNjVpUHlPeTdjam5nODVIT05NRGZlb2hLY0xDL1RPQWRwUEFoK1I4bjN5Y0xtd09vOStLUmsvaVVsTXlHNzd6YnNNZVl0VFNhag==
+X-SES-DKIM-SIGNATURE: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw; d=amazonses.com; t=1478055777;
+	h=X-SES-RECEIPT:Message-Id:From:To:MIME-Version:Content-Type:Subject:Date;
+	bh=t9lA7wTt2TdpR5MevT6FRFvAhyxowN6TerK54YQf5rY=;
+	b=ofKXLOJo6EzwW1OsflQZChoca5iYRvfUZ7RuAWLNQg3pc9el43bjLgDzPaMZSvZ5
+	uQK8XIR2mXM9AG4mscMLoHg/h+RKVZu9vDF19oJC+261p038vLJpPweKwZKoj8fQlXO
+	uJbcr5g89Vcny9HoDYifCdtUqke7DOhPulSuyY2I=
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+	by mailout.nyi.internal (Postfix) with ESMTP id 1BD7120860
+	for <inbox@email.cclug.org.au>; Tue,  1 Nov 2016 23:02:58 -0400 (EDT)
+Received: from web6 ([10.202.2.216])
+  by compute1.internal (MEProxy); Tue, 01 Nov 2016 23:02:58 -0400
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; d=tobin.cc; h=
+	x-me-sender:message-id:from:to:mime-version
+	:content-transfer-encoding:content-type:subject:references
+	:in-reply-to:date; s=mesmtp; bh=UzArW+N4uS6DO/LmVAyhDu+fHNo=; b=
+	r64X1a871XamDfpKnqcKzEuQD85/6TknRE8heQDHqCwbykWwCIrxhWZb1RCiU12l
+	pDpESmE2TpG8p0w4G0PDKtTtCfgQcPuHCpDtuGKoT0FNsagd8BT9GZqRE1NB1maY
+	5/6ktdPDQ5GhQeK3m3rrwTkQMdcoHpAR5p9ttUFNaMw=
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; d=
+	messagingengine.com; h=x-me-sender:message-id:from:to
+	:mime-version:content-transfer-encoding:content-type:subject
+	:references:in-reply-to:date; s=smtpout; bh=UzArW+N4uS6DO/LmVAyh
+	Du+fHNo=; b=To8t8CIXR6kj5ycaUIrPzDoExe0wh201XuT7NynomztQvn6zi3Yq
+	hgniBk6w1NQWdWsULxMxmOjgZGKY//6hrIqd2khBj39KcE7PzleV+I+l0ILOcvB0
+	7erpemUX4rADDq3EWpdkmBljRAxYVkTUJt8zTz/RA8Mh11pGSwtXhyM=
+X-ME-Sender: <xms:YVcZWFxJn4ZsSIzw8Oxt3LBdj4TLi9MCAOKiQq8xBstEEhWShE8OvA>
+Received: by mailuser.nyi.internal (Postfix, from userid 99)
+	id D8176434D; Tue,  1 Nov 2016 23:02:57 -0400 (EDT)
+Message-Id: <1478055777.49994.774563025.20C2D7E8@webmail.messagingengine.com>
+From: me@tobin.cc
+To: inbox@email.cclug.org.au
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Mailer: MessagingEngine.com Webmail Interface - ajax-037c6db9
+Subject: Re: bcc check
+References: <0100015822fb9bc4-7e9ae2bc-ee6c-4f63-a112-ad30784b8f40-000000@email.amazonses.com>
+In-Reply-To: <0100015822fb9bc4-7e9ae2bc-ee6c-4f63-a112-ad30784b8f40-000000@email.amazonses.com>
+Date: Wed, 02 Nov 2016 14:02:57 +1100
+
+yes I got it
+
+On Wed, Nov 2, 2016, at 02:01 PM, Max Kuchin wrote:
+> test N6
+> 
+> --
+> Sincerely,
+> Max Kuchin
