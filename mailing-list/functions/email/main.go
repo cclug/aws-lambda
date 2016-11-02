@@ -20,6 +20,7 @@ import (
 const (
 	bucket     = "cclug"
 	inboxEmail = "CCLUG mailing list <inbox@email.cclug.org.au>"
+	nl         = "\r\n"
 )
 
 // must be all lower case
@@ -182,10 +183,10 @@ func sendEmail(sess *session.Session, from, text, subject, messageId string) err
 		RawMessage: &ses.RawMessage{ // Required
 			Data: payload(from, text, subject, messageId),
 		},
-		Destinations: []*string{
-			aws.String("undisclosed recipient:"), // Required
-			// More values...
-		},
+		// Destinations: []*string{
+		// 	aws.String("undisclosed recipient:"), // Required
+		// 	// More values...
+		// },
 		Source: aws.String(from),
 	}
 	resp, err := svc.SendRawEmail(params)
@@ -208,34 +209,28 @@ func payload(from, text, subject, messageId string) []byte { //
 			buf.WriteString(", ")
 		}
 	}
-	buf.WriteString("\r\n")
+	buf.WriteString(nl)
 
-	buf.WriteString("From: ")
-	buf.WriteString(from)
-	buf.WriteString("\r\n")
+	buf.Write(header("From", from))
+	buf.Write(header("Reply-To", inboxEmail))
+	buf.Write(header("Subject", subject))
+	buf.Write(header("MIMIE-Version", "1.0"))
+	buf.Write(header("Content-Type", "text/plain; charset=UTF-8"))
+	buf.Write(header("In-Reply-To", messageId))
 
-	buf.WriteString("Reply-To: ")
-	buf.WriteString(inboxEmail)
-	buf.WriteString("\r\n")
-
-	buf.WriteString("Subject: ")
-	buf.WriteString(subject)
-	buf.WriteString("\r\n")
-
-	buf.WriteString("MIME-Version: 1.0")
-	buf.WriteString("\r\n")
-
-	buf.WriteString("Content-Type: text/plain; charset=UTF-8")
-	buf.WriteString("\r\n")
-
-	buf.WriteString("In-Reply-To: ")
-	buf.WriteString(messageId)
-	buf.WriteString("\r\n")
-	buf.WriteString("\r\n")
-
+	buf.WriteString(nl)
 	buf.WriteString(text)
-	buf.WriteString("\r\n")
+	buf.WriteString(nl)
 
+	return buf.Bytes()
+}
+
+func header(front, back string) []byte {
+	var buf bytes.Buffer
+	buf.WriteString(front)
+	buf.WriteString(": ")
+	buf.WriteString(back)
+	buf.WriteString(nl)
 	return buf.Bytes()
 }
 

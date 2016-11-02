@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -71,5 +73,24 @@ func TestGetText(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error()) //
 	}
+	breakLine(os.Stderr)
 	fmt.Fprintf(os.Stderr, "body: %s\n", msg)
+	breakLine(os.Stderr)
+}
+
+func TestPayload(t *testing.T) {
+	from := "me@mail.com"
+	text := "the email\n"
+	messageId := "long message ID"
+	subject := "the subject"
+
+	buf := payload(from, text, subject, messageId)
+	breakLine(os.Stderr)
+	fmt.Fprintf(os.Stderr, "payload: \n\n%s\n", string(buf))
+	breakLine(os.Stderr)
+}
+
+func breakLine(w io.Writer) {
+	fmt.Fprintf(w, strings.Repeat("-", 20))
+	fmt.Fprintf(w, "\n")
 }
