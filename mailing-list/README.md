@@ -15,10 +15,10 @@ Deploy the function:
 
 `$ apex deploy email`
 
-## Setting up DNS to host lambda.cclug.org.au zone on Route 53
+## Setting up DNS to host email.cclug.org.au zone on Route 53
 ```
-lambda.cclug.org.au. 21599	IN	NS	ns-1333.awsdns-38.org.
-lambda.cclug.org.au. 21599	IN	NS	ns-148.awsdns-18.com.
-lambda.cclug.org.au. 21599	IN	NS	ns-1976.awsdns-55.co.uk.
-lambda.cclug.org.au. 21599	IN	NS	ns-572.awsdns-07.net.
+email.cclug.org.au.	172800	IN	NS	ns-1531.awsdns-63.org.
+email.cclug.org.au.	172800	IN	NS	ns-1897.awsdns-45.co.uk.
+email.cclug.org.au.	172800	IN	NS	ns-407.awsdns-50.com.
+email.cclug.org.au.	172800	IN	NS	ns-544.awsdns-04.net.
 ```
