@@ -174,7 +174,7 @@ func sendEmail(sess *session.Session, from, text, subject string) error {
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#example_SES_SendEmail
 	params := &ses.SendEmailInput{
 		Destination: &ses.Destination{ // Required
-			ToAddresses: to,
+			BccAddresses: to,
 		},
 		Message: &ses.Message{ // Required
 			Body: &ses.Body{ // Required
