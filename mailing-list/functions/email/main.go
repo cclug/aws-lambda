@@ -64,7 +64,7 @@ func handle(event json.RawMessage) error {
 	if err != nil {
 		return fmt.Errorf("S3 error: %s", err.Error())
 	}
-	text, err := getText(body)
+	text, replyTo, err := getText(body)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,11 @@ func handle(event json.RawMessage) error {
 	if !isAuthSender(from) {
 		return fmt.Errorf("sender is not in whitelist: %s", from)
 	}
-	err = sendEmail(sess, from, text, m.headers.subject, m.headers.messageId)
+        if replyTo != "" {
+                replyTo = m.headers.messageId
+        }
+
+	err = sendEmail(sess, from, text, m.headers.subject, replyTo)
 	if err != nil {
 		return err
 	}
@@ -134,13 +138,14 @@ func getBody(sess *session.Session, bucket, key string) ([]byte, error) {
 }
 
 // getText: get text from body of email
-func getText(body []byte) (string, error) {
+func getText(body []byte) (string, string, error) {
 	reader := bytes.NewReader(body)
 	msg, err := email.ParseMessage(reader)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-
+        replyTo := msg.Header.Get("In-Reply-To") 
+        
 	var text string
 	msgBit := msg.PartsContentTypePrefix("text/plain")
 	if len(msgBit) > 0 {
@@ -154,7 +159,7 @@ func getText(body []byte) (string, error) {
 		text = string(msg.Body) //
 	}
 
-	return text, nil
+	return text, replyTo, nil
 }
 
 // isAuthSender: checks if address is authorized to send email
@@ -176,12 +181,12 @@ func isAuthSender(s string) bool {
 }
 
 // sendEmail: send email (and print response to stderr)
-func sendEmail(sess *session.Session, from, text, subject, messageId string) error {
+func sendEmail(sess *session.Session, from, text, subject, replyTo string) error {
 	svc := ses.New(sess)
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#example_SES_SendEmail
 	params := &ses.SendRawEmailInput{
 		RawMessage: &ses.RawMessage{ // Required
-			Data: payload(from, text, subject, messageId),
+			Data: payload(from, text, subject, replyTo),
 		},
 		// Destinations: []*string{
 		// 	aws.String("undisclosed recipient:"), // Required
