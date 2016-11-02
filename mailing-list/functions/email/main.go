@@ -78,9 +78,9 @@ func handle(event json.RawMessage) error {
 	if !isAuthSender(from) {
 		return fmt.Errorf("sender is not in whitelist: %s", from)
 	}
-        if replyTo != "" {
-                replyTo = m.headers.messageId
-        }
+	if replyTo != "" {
+		replyTo = m.headers.messageId
+	}
 
 	err = sendEmail(sess, from, text, m.headers.subject, replyTo)
 	if err != nil {
@@ -144,8 +144,8 @@ func getText(body []byte) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-        replyTo := msg.Header.Get("In-Reply-To") 
-        
+	replyTo := msg.Header.Get("In-Reply-To")
+
 	var text string
 	msgBit := msg.PartsContentTypePrefix("text/plain")
 	if len(msgBit) > 0 {
@@ -208,9 +208,14 @@ func payload(from, text, subject, messageId string) []byte { //
 
 	buf.WriteString("Bcc: ")
 	to := whitelistPtrs()
+	end := len(to) - 1
 	for i, s := range to {
+		if strings.Contains(from, *s) {
+			end--
+			continue
+		}
 		buf.WriteString(*s)
-		if i != len(to)-1 {
+		if i != end {
 			buf.WriteString(", ")
 		}
 	}
