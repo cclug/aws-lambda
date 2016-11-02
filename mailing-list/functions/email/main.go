@@ -53,6 +53,7 @@ type mail struct {
 
 // handle an event
 func handle(event json.RawMessage) error {
+//        fmt.Println("Executing Lambda function")
 	m, err := eventToMail(event)
 	if err != nil {
 		return err
@@ -62,7 +63,7 @@ func handle(event json.RawMessage) error {
 	sess := session.Must(session.NewSession())
 	body, err := getBody(sess, bucket, m.messageId)
 	if err != nil {
-		return err
+		return fmt.Errorf("S3 error: %s", err.Error())
 	}
 	text, err := getText(body)
 	if err != nil {
@@ -202,7 +203,7 @@ func sendEmail(sess *session.Session, from, text, subject string) error {
 // return slice of pointers to whitelisted email addresses
 // used to initialize ses.SendEmailInput data structure
 func whitelistPtrs() []*string {
-	whitelist := []string{"mkuchin@gmailcom", "me@tobin.cc"} // remove this for production
+	whitelist := []string{"mkuchin@gmail.com", "me@tobin.cc"} // remove this for production
 	to := make([]*string, len(whitelist))
 	for i := range whitelist {
 		to[i] = &whitelist[i]
