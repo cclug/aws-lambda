@@ -15,13 +15,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/veqryn/go-email/email"
+	"gopkg.in/yaml.v2"
 )
 
 const (
-	bucket     = "cclug"
-	inboxEmail = "CCLUG mailing list <inbox@email.cclug.org.au>"
 	nl         = "\r\n"
 )
+
+type Config struct {
+	Bucket string `yaml:"backet"`
+	InboxEmail string `yaml:"inboxEmail"`
+}
 
 // must be all lower case
 var whitelist = []string{
@@ -32,6 +36,8 @@ var whitelist = []string{
 	"robert@thorsby.com.au",        // Robert
 	"officemail2259@yahoo.com.au",  // Toby
 }
+
+var config Config
 
 func main() {
 	apex.HandleFunc(func(event json.RawMessage, ctx *apex.Context) (interface{}, error) {
@@ -59,8 +65,17 @@ func handle(event json.RawMessage) error {
 	if err != nil {
 		return err
 	}
+	data, err := ioutil.ReadFile("config.yml")
+	if err != nil {
+		return fmt.Errorf("Error reading config: %s", err.Error())
+	}
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		return fmt.Errorf("Error unmarshalling config: %s", err.Error())
+	}
+
 	sess := session.Must(session.NewSession())
-	body, err := getBody(sess, bucket, m.messageId)
+	body, err := getBody(sess, config.Bucket, m.messageId)
 	if err != nil {
 		return fmt.Errorf("S3 error: %s", err.Error())
 	}
@@ -222,7 +237,7 @@ func payload(from, text, subject, messageId string) []byte { //
 	buf.WriteString(nl)
 
 	buf.Write(header("From", from))
-	buf.Write(header("Reply-To", inboxEmail))
+	buf.Write(header("Reply-To", config.InboxEmail))
 	buf.Write(header("Subject", subject))
 	buf.Write(header("MIMIE-Version", "1.0"))
 	buf.Write(header("Content-Type", "text/plain; charset=UTF-8"))
