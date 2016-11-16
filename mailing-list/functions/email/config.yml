@@ -1,0 +1,6 @@
+bucket: "cclug"
+inboxEmail: "CCLUG mailing list <inbox@email.cclug.org.au>"
+whitelist: 
+  - mkuchin@gmail.com
+  - me@tobin.cc
+
