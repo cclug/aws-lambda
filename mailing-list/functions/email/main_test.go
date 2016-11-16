@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
-	"strings"
 	"testing"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 func TestIsAuthSender(t *testing.T) {
@@ -64,33 +62,49 @@ func TestIsAuthSender(t *testing.T) {
 
 // }
 
-func TestGetText(t *testing.T) {
-	body, err := ioutil.ReadFile("../../body2.txt")
+// func TestGetText(t *testing.T) {
+// 	body, err := ioutil.ReadFile("../../body2.txt")
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+// 	msg, err := getText(body) //
+// 	if err != nil {
+// 		t.Errorf(err.Error()) //
+// 	}
+// 	breakLine(os.Stderr)
+// 	fmt.Fprintf(os.Stderr, "body: %s\n", msg)
+// 	breakLine(os.Stderr)
+// }
+
+// func TestPayload(t *testing.T) {
+// 	from := "me@mail.com"
+// 	text := "the email\n"
+// 	messageId := "long message ID"
+// 	subject := "the subject"
+
+// 	buf := payload(from, text, subject, messageId)
+// 	breakLine(os.Stderr)
+// 	fmt.Fprintf(os.Stderr, "payload: \n\n%s\n", string(buf))
+// 	breakLine(os.Stderr)
+// }
+
+// func breakLine(w io.Writer) {
+// 	fmt.Fprintf(w, strings.Repeat("-", 20))
+// 	fmt.Fprintf(w, "\n")
+// }
+
+func TestConfig(t *testing.T) {
+	var config Config
+	data, err := ioutil.ReadFile("config.yml")
 	if err != nil {
-		t.Error(err.Error())
+		t.Errorf("Error reading config: %s", err.Error())
 	}
-	msg, err := getText(body) //
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		t.Errorf(err.Error()) //
+		t.Errorf("Error unmarshalling config: %s", err.Error())
 	}
-	breakLine(os.Stderr)
-	fmt.Fprintf(os.Stderr, "body: %s\n", msg)
-	breakLine(os.Stderr)
-}
+	if config.Bucket != "cclug" {
+		t.Errorf("bucket name wrong: %s\n", config.Bucket)
+	}
 
-func TestPayload(t *testing.T) {
-	from := "me@mail.com"
-	text := "the email\n"
-	messageId := "long message ID"
-	subject := "the subject"
-
-	buf := payload(from, text, subject, messageId)
-	breakLine(os.Stderr)
-	fmt.Fprintf(os.Stderr, "payload: \n\n%s\n", string(buf))
-	breakLine(os.Stderr)
-}
-
-func breakLine(w io.Writer) {
-	fmt.Fprintf(w, strings.Repeat("-", 20))
-	fmt.Fprintf(w, "\n")
 }

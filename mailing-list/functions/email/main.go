@@ -19,11 +19,11 @@ import (
 )
 
 const (
-	nl         = "\r\n"
+	nl = "\r\n"
 )
 
 type Config struct {
-	Bucket string `yaml:"backet"`
+	Bucket     string `yaml:"bucket"`
 	InboxEmail string `yaml:"inboxEmail"`
 }
 
