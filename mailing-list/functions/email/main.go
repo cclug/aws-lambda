@@ -214,20 +214,13 @@ func sendEmail(sess *session.Session, from, text, subject, replyTo string) error
 func payload(from, text, subject, messageId string) []byte { //
 	var buf bytes.Buffer
 
-	buf.WriteString("Bcc: ")
 	to := whitelistPtrs()
-	end := len(to) - 1
-	for i, s := range to {
-		if strings.Contains(from, *s) {
-			end--
-			continue
-		}
-		buf.WriteString(*s)
-		if i != end {
-			buf.WriteString(", ")
+	for _, s := range to {
+		if !strings.Contains(from, *s) {
+                	buf.Write(header("Bcc", *s))
 		}
 	}
-	buf.WriteString(nl)
+	//buf.WriteString(nl)
         //build from
         index := strings.Index(from, "<")
         if(index == -1) {
