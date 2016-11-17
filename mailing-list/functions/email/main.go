@@ -25,16 +25,7 @@ const (
 type Config struct {
 	Bucket     string `yaml:"bucket"`
 	InboxEmail string `yaml:"inboxEmail"`
-}
-
-// must be all lower case
-var whitelist = []string{
-	"mkuchin@gmail.com",            // Max
-	"me@tobin.cc",                  // Tobin
-	"tstarling@wikimedia.org",      // Tim
-	"neville.bagot@det.nsw.edu.au", // Neville
-	"robert@thorsby.com.au",        // Robert
-	"officemail2259@yahoo.com.au",  // Toby
+	Whitelist  []string `yaml:"whitelist"`
 }
 
 var config Config
@@ -74,6 +65,8 @@ func handle(event json.RawMessage) error {
 		return fmt.Errorf("Error unmarshalling config: %s", err.Error())
 	}
 
+        fmt.Fprintf(os.Stderr, "Config: %v\n", config)
+
 	sess := session.Must(session.NewSession())
 	body, err := getBody(sess, config.Bucket, m.messageId)
 	if err != nil {
@@ -84,7 +77,7 @@ func handle(event json.RawMessage) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "%s\n", text)
+//	fmt.Fprintf(os.Stderr, "%s\n", text)
 
 	if len(m.headers.from) > 1 {
 		fmt.Fprintf(os.Stderr, "multiple From not supported: %v\n", m.headers.from)
@@ -99,7 +92,7 @@ func handle(event json.RawMessage) error {
 
 	err = sendEmail(sess, from, text, m.headers.subject, replyTo)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error sending email: %s", err)
 	}
 	return nil
 }
@@ -187,7 +180,7 @@ func isAuthSender(s string) bool {
 	if addr == "" {
 		return false
 	}
-	for _, valid := range whitelist {
+	for _, valid := range config.Whitelist {
 		if addr == valid {
 			return true
 		}
@@ -207,7 +200,7 @@ func sendEmail(sess *session.Session, from, text, subject, replyTo string) error
 		// 	aws.String("undisclosed recipient:"), // Required
 		// 	// More values...
 		// },
-		Source: aws.String(from),
+		Source: aws.String(config.InboxEmail),
 	}
 	resp, err := svc.SendRawEmail(params)
 	if err != nil {
@@ -235,8 +228,15 @@ func payload(from, text, subject, messageId string) []byte { //
 		}
 	}
 	buf.WriteString(nl)
+        //build from
+        index := strings.Index(from, "<")
+        if(index == -1) {
+          index = strings.Index(from, "@")
+        }
+        fromText := from[0:index] + " <" + config.InboxEmail + ">"
+        fmt.Fprintf(os.Stderr, "From: %s\n", fromText)
 
-	buf.Write(header("From", from))
+	buf.Write(header("From", fromText))
 	buf.Write(header("Reply-To", config.InboxEmail))
 	buf.Write(header("Subject", subject))
 	buf.Write(header("MIMIE-Version", "1.0"))
@@ -262,10 +262,9 @@ func header(front, back string) []byte {
 // return slice of pointers to whitelisted email addresses
 // used to initialize ses.SendEmailInput data structure
 func whitelistPtrs() []*string {
-	whitelist := []string{"mkuchin@gmail.com", "me@tobin.cc"} // remove this for production
-	to := make([]*string, len(whitelist))
-	for i := range whitelist {
-		to[i] = &whitelist[i]
+	to := make([]*string, len(config.Whitelist))
+	for i := range config.Whitelist {
+		to[i] = &config.Whitelist[i]
 	}
 	return to
 }
